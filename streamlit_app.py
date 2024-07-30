@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
-from pathlib import Path
+import numpy as np
+import datetime as dt
 
 # Set the title and favicon that appear in the Browser's tab bar.
 st.set_page_config(
@@ -9,52 +10,45 @@ st.set_page_config(
 )
 
 # -----------------------------------------------------------------------------
-# Declare some useful functions.
+# Generate some realistic-looking data.
 
 @st.cache_data
-def get_solar_forecast_data():
-    """Grab solar power forecast data from a CSV file.
+def generate_solar_forecast_data():
+    """Generate simulated solar power forecast data."""
 
-    This uses caching to avoid having to read the file every time.
-    """
+    np.random.seed(42)
+    start_date = dt.date(2024, 1, 1)
+    end_date = dt.date(2024, 12, 31)
+    date_range = pd.date_range(start_date, end_date, freq='D')
+    hours = list(range(24))
 
-    # Instead of a CSV on disk, you could read from an HTTP endpoint here too.
-    DATA_FILENAME = Path(__file__).parent / 'data/solar_forecast_data.csv'
-    raw_solar_df = pd.read_csv(DATA_FILENAME)
+    # Create DataFrame for daily forecasts
+    daily_data = []
+    for single_date in date_range:
+        for hour in hours:
+            daily_data.append([
+                single_date,
+                hour,
+                np.random.uniform(0, 5),  # Model 1
+                np.random.uniform(0, 5),  # Model 2
+                np.random.uniform(0, 5)   # Model 3
+            ])
 
-    MIN_DATE = '2024-01-01'
-    MAX_DATE = '2024-12-31'
+    df = pd.DataFrame(daily_data, columns=['Date', 'Hour', 'Model 1', 'Model 2', 'Model 3'])
 
-    # The data above might have columns like:
-    # - Date
-    # - Hour
-    # - Forecast Model 1
-    # - Forecast Model 2
-    # - ...
-    #
-    # We might need to reshape or clean the data accordingly.
-    # For simplicity, assuming it is already in the desired format.
+    return df
 
-    # Convert Date from string to datetime
-    raw_solar_df['Date'] = pd.to_datetime(raw_solar_df['Date'])
-
-    return raw_solar_df
-
-solar_df = get_solar_forecast_data()
+solar_df = generate_solar_forecast_data()
 
 # -----------------------------------------------------------------------------
 # Draw the actual page
 
 # Set the title that appears at the top of the page.
-'''
-# :sunny: Solar Power Forecast Dashboard
-
-Browse solar power forecasts for your rooftop solar panels. View both daily and hourly predictions from various models to optimize your solar energy usage.
-'''
+st.title(':sunny: Solar Power Forecast Dashboard')
+st.markdown("Browse solar power forecasts for your rooftop solar panels. View both daily and hourly predictions from various models to optimize your solar energy usage.")
 
 # Add some spacing
-''
-''
+st.write('')
 
 min_date = solar_df['Date'].min()
 max_date = solar_df['Date'].max()
@@ -82,7 +76,7 @@ filtered_solar_df = solar_df[
     (solar_df['Date'] <= date_range[1])
 ]
 
-st.header('Solar Power Forecasts', divider='gray')
+st.header('Solar Power Forecasts', anchor='gray')
 
 # Create line charts for daily predictions
 for model in selected_models:
@@ -91,7 +85,7 @@ for model in selected_models:
     st.line_chart(daily_forecast, x='Date', y=model)
 
 # Create line charts for hourly predictions
-st.header('Hourly Forecasts', divider='gray')
+st.header('Hourly Forecasts', anchor='gray')
 hourly_forecast = filtered_solar_df.groupby(['Date', 'Hour'])[selected_models].mean().reset_index()
 
 for model in selected_models:
