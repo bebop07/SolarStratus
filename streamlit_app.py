@@ -107,23 +107,16 @@ hourly_data = solar_df[
 
 st.header('Hourly Solar Power Forecasts')
 
+# Create line charts for hourly predictions
 for model in selected_models:
     st.subheader(f'{model} Hourly Forecast')
     hourly_forecast = hourly_data[hourly_data['Date'].dt.date == hourly_start]
+    
     if not hourly_forecast.empty:
-        st.write(f'**{model} Forecast for {hourly_start}**')
-        hourly_forecast_pivot = hourly_forecast.pivot(index='Hour', columns='Date', values=model).fillna(0)
-        st.line_chart(hourly_forecast_pivot)
+        hourly_avg = hourly_forecast.groupby('Hour').agg({model: 'mean'}).reset_index()
+        st.line_chart(hourly_avg.set_index('Hour')[model], title=f'{model} Forecast for {hourly_start}')
     else:
         st.write(f'No data available for {model} on {hourly_start}')
-
-    # Adding a weather-like visualization
-    st.write("### Hourly Heatmap")
-    if not hourly_forecast.empty:
-        heatmap_data = hourly_forecast.pivot(index='Hour', columns='Date', values=model).fillna(0)
-        st.dataframe(heatmap_data)
-    else:
-        st.write("No hourly data available.")
 
 # Adding some styling and information
 st.write('''
