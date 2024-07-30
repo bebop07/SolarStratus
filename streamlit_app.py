@@ -10,7 +10,7 @@ st.set_page_config(
 )
 
 # -----------------------------------------------------------------------------
-# Generate some realistic-looking data.
+# Generate realistic-looking data.
 
 @st.cache_data
 def generate_solar_forecast_data():
@@ -25,12 +25,17 @@ def generate_solar_forecast_data():
     hourly_data = []
     for single_date in date_range:
         for hour in range(24):
+            # Peak solar power around noon
+            peak_hour = 13  # Peak at 1 PM
+            base_power = 250
+            max_power = 400
+            power = base_power + (max_power - base_power) * np.exp(-((hour - peak_hour) ** 2) / 2)
             hourly_data.append([
                 single_date,
                 hour,
-                np.random.uniform(250, 400),  # Model 1
-                np.random.uniform(250, 400),  # Model 2
-                np.random.uniform(250, 400)   # Model 3
+                power,  # Model 1
+                power * np.random.uniform(0.95, 1.05),  # Model 2 with slight variance
+                power * np.random.uniform(0.95, 1.05)   # Model 3 with slight variance
             ])
 
     df = pd.DataFrame(hourly_data, columns=['Date', 'Hour', 'Model 1', 'Model 2', 'Model 3'])
