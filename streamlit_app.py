@@ -20,12 +20,11 @@ def generate_solar_forecast_data():
     start_date = dt.date(2024, 1, 1)
     end_date = dt.date(2024, 12, 31)
     date_range = pd.date_range(start_date, end_date, freq='H')
-    hours = list(range(24))
 
     # Create DataFrame for hourly forecasts
     hourly_data = []
     for single_date in date_range:
-        for hour in hours:
+        for hour in range(24):
             hourly_data.append([
                 single_date,
                 hour,
@@ -95,5 +94,6 @@ for model in selected_models:
     st.subheader(f'{model} Hourly Forecast')
     for date in hourly_forecast['Date'].dt.date.unique():
         daily_hourly_data = hourly_forecast[hourly_forecast['Date'].dt.date == date]
-        st.line_chart(daily_hourly_data, x='Hour', y=model, title=f'{model} Forecast for {date}')
-
+        # Ensure that 'Hour' is a numeric type for the x-axis
+        daily_hourly_data = daily_hourly_data[['Hour', model]]
+        st.line_chart(daily_hourly_data.set_index('Hour')[model], title=f'{model} Forecast for {date}')
