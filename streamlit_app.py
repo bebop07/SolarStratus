@@ -77,23 +77,22 @@ filtered_solar_df = solar_df[
     (solar_df['Date'].dt.date <= date_range[1])
 ]
 
-st.header('Solar Power Forecasts', anchor='gray')
+st.header('Solar Power Forecasts')
 
 # Create line charts for daily predictions
 for model in selected_models:
     st.subheader(f'{model} Daily Forecast')
     daily_forecast = filtered_solar_df.groupby('Date').agg({model: 'mean'}).reset_index()
     daily_forecast['Date'] = pd.to_datetime(daily_forecast['Date'])
-    st.line_chart(daily_forecast, x='Date', y=model)
+    st.line_chart(daily_forecast.set_index('Date')[model])
 
 # Create line charts for hourly predictions
-st.header('Hourly Forecasts', anchor='gray')
+st.header('Hourly Forecasts')
 hourly_forecast = filtered_solar_df.groupby(['Date', 'Hour'])[selected_models].mean().reset_index()
 
 for model in selected_models:
     st.subheader(f'{model} Hourly Forecast')
     for date in hourly_forecast['Date'].dt.date.unique():
         daily_hourly_data = hourly_forecast[hourly_forecast['Date'].dt.date == date]
-        # Ensure that 'Hour' is a numeric type for the x-axis
-        daily_hourly_data = daily_hourly_data[['Hour', model]]
-        st.line_chart(daily_hourly_data.set_index('Hour')[model], title=f'{model} Forecast for {date}')
+        daily_hourly_data = daily_hourly_data.pivot(index='Hour', columns='Date', values=model).fillna(0)
+        st.line_chart(daily_hourly_data, title=f'{model} Forecast for {date}')
