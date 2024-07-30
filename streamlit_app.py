@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import datetime as dt
+import matplotlib.pyplot as plt
 
 # Set the title and favicon that appear in the Browser's tab bar.
 st.set_page_config(
@@ -15,7 +16,7 @@ st.set_page_config(
 @st.cache_data
 def generate_solar_forecast_data():
     """Generate simulated solar power forecast data."""
-
+    
     np.random.seed(42)
     start_date = dt.date(2024, 1, 1)
     end_date = dt.date(2024, 12, 31)
@@ -28,9 +29,9 @@ def generate_solar_forecast_data():
             hourly_data.append([
                 single_date,
                 hour,
-                np.random.uniform(0, 5),  # Model 1
-                np.random.uniform(0, 5),  # Model 2
-                np.random.uniform(0, 5)   # Model 3
+                np.random.uniform(250, 400),  # Model 1
+                np.random.uniform(250, 400),  # Model 2
+                np.random.uniform(250, 400)   # Model 3
             ])
 
     df = pd.DataFrame(hourly_data, columns=['Date', 'Hour', 'Model 1', 'Model 2', 'Model 3'])
@@ -44,7 +45,7 @@ solar_df = generate_solar_forecast_data()
 
 # Set the title that appears at the top of the page.
 st.title(':sunny: Solar Power Forecast Dashboard')
-st.markdown("Browse solar power forecasts for your rooftop solar panels. View both daily and hourly predictions from various models to optimize your solar energy usage.")
+st.markdown("Explore solar power forecasts for your rooftop panels. View both daily and hourly predictions from various models to optimize your solar energy usage.")
 
 # Add some spacing
 st.write('')
@@ -87,6 +88,11 @@ for model in selected_models:
     st.subheader(f'{model} Daily Forecast')
     daily_forecast = weekly_data.groupby('Date').agg({model: 'mean'}).reset_index()
     daily_forecast['Date'] = pd.to_datetime(daily_forecast['Date'])
+    
+    # Normalize data
+    daily_forecast[model] = np.clip(daily_forecast[model], 250, 400)
+    
+    # Plot with Streamlit
     st.line_chart(daily_forecast.set_index('Date')[model])
 
 # Hourly forecasts
@@ -114,6 +120,10 @@ for model in selected_models:
     
     if not hourly_forecast.empty:
         hourly_avg = hourly_forecast.groupby('Hour').agg({model: 'mean'}).reset_index()
+        
+        # Normalize data
+        hourly_avg[model] = np.clip(hourly_avg[model], 250, 400)
+        
         st.write(f'{model} Forecast for {hourly_start}')
         st.line_chart(hourly_avg.set_index('Hour')[model])
     else:
@@ -125,3 +135,18 @@ st.write('''
 - For daily forecasts, choose a week to see the trend over that period.
 - For hourly forecasts, select a single day to view detailed hourly predictions.
 ''')
+
+# Add some more styling
+st.markdown("""
+<style>
+    .stApp {
+        background-color: #f0f2f6;
+    }
+    .stTitle {
+        color: #ffb547;
+    }
+    .stHeader {
+        color: #ff8c00;
+    }
+</style>
+""", unsafe_allow_html=True)
