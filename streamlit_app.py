@@ -53,14 +53,15 @@ st.write('')
 min_date = solar_df['Date'].min().date()
 max_date = solar_df['Date'].max().date()
 
-# Date range slider
-date_range = st.slider(
-    'Select the date range:',
+# Weekly date range slider
+week_start = st.date_input(
+    'Select the start date for weekly forecast:',
+    value=min_date,
     min_value=min_date,
-    max_value=max_date,
-    value=[min_date, max_date],
-    format='YYYY-MM-DD'
+    max_value=max_date
 )
+
+week_end = week_start + pd.DateOffset(weeks=1)
 
 # List of forecast models
 forecast_models = [col for col in solar_df.columns if col not in ['Date', 'Hour']]
@@ -71,28 +72,54 @@ selected_models = st.multiselect(
     forecast_models
 )
 
-# Filter the data
-filtered_solar_df = solar_df[
-    (solar_df['Date'].dt.date >= date_range[0]) &
-    (solar_df['Date'].dt.date <= date_range[1])
+# Filter the data for weekly view
+weekly_data = solar_df[
+    (solar_df['Date'].dt.date >= week_start) &
+    (solar_df['Date'].dt.date < week_end)
 ]
 
-st.header('Solar Power Forecasts')
+st.header('Weekly Solar Power Forecasts')
 
 # Create line charts for daily predictions
 for model in selected_models:
     st.subheader(f'{model} Daily Forecast')
-    daily_forecast = filtered_solar_df.groupby('Date').agg({model: 'mean'}).reset_index()
+    daily_forecast = weekly_data.groupby('Date').agg({model: 'mean'}).reset_index()
     daily_forecast['Date'] = pd.to_datetime(daily_forecast['Date'])
     st.line_chart(daily_forecast.set_index('Date')[model])
 
-# Create line charts for hourly predictions
-st.header('Hourly Forecasts')
-hourly_forecast = filtered_solar_df.groupby(['Date', 'Hour'])[selected_models].mean().reset_index()
+# Hourly forecasts
+hourly_start = st.date_input(
+    'Select the start date for hourly forecast:',
+    value=min_date,
+    min_value=min_date,
+    max_value=max_date
+)
+
+hourly_end = hourly_start + pd.DateOffset(days=1)
+
+# Filter the data for hourly view
+hourly_data = solar_df[
+    (solar_df['Date'].dt.date >= hourly_start) &
+    (solar_df['Date'].dt.date < hourly_end)
+]
+
+st.header('Hourly Solar Power Forecasts')
 
 for model in selected_models:
     st.subheader(f'{model} Hourly Forecast')
-    for date in hourly_forecast['Date'].dt.date.unique():
-        daily_hourly_data = hourly_forecast[hourly_forecast['Date'].dt.date == date]
-        daily_hourly_data = daily_hourly_data.pivot(index='Hour', columns='Date', values=model).fillna(0)
-        st.line_chart(daily_hourly_data, title=f'{model} Forecast for {date}')
+    hourly_forecast = hourly_data[hourly_data['Date'].dt.date == hourly_start]
+    hourly_forecast_pivot = hourly_forecast.pivot(index='Hour', columns='Date', values=model).fillna(0)
+    st.line_chart(hourly_forecast_pivot, title=f'{model} Forecast for {hourly_start}')
+
+    # Adding a weather-like visualization
+    st.markdown("### Hourly Heatmap")
+    st.write("Visualize hourly data as a heatmap for better insight into power generation patterns.")
+    heatmap_data = hourly_forecast.pivot(index='Hour', columns='Date', values=model).fillna(0)
+    st.dataframe(heatmap_data)
+
+# Adding some styling and information
+st.write('''
+#### Tips:
+- For daily forecasts, choose a week to see the trend over that period.
+- For hourly forecasts, select a single day to view detailed hourly predictions.
+''')
