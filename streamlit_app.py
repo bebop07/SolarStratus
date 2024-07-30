@@ -50,6 +50,8 @@ st.markdown("Browse solar power forecasts for your rooftop solar panels. View bo
 st.write('')
 
 # Convert date columns to datetime objects for correct filtering
+solar_df['Date'] = pd.to_datetime(solar_df['Date'])
+
 min_date = solar_df['Date'].min().date()
 max_date = solar_df['Date'].max().date()
 
@@ -75,7 +77,7 @@ selected_models = st.multiselect(
 # Filter the data for weekly view
 weekly_data = solar_df[
     (solar_df['Date'].dt.date >= week_start) &
-    (solar_df['Date'].dt.date < week_end)
+    (solar_df['Date'].dt.date < week_end.date())
 ]
 
 st.header('Weekly Solar Power Forecasts')
@@ -100,7 +102,7 @@ hourly_end = hourly_start + pd.DateOffset(days=1)
 # Filter the data for hourly view
 hourly_data = solar_df[
     (solar_df['Date'].dt.date >= hourly_start) &
-    (solar_df['Date'].dt.date < hourly_end)
+    (solar_df['Date'].dt.date < hourly_end.date())
 ]
 
 st.header('Hourly Solar Power Forecasts')
