@@ -114,7 +114,8 @@ for model in selected_models:
     
     if not hourly_forecast.empty:
         hourly_avg = hourly_forecast.groupby('Hour').agg({model: 'mean'}).reset_index()
-        st.line_chart(hourly_avg.set_index('Hour')[model], title=f'{model} Forecast for {hourly_start}')
+        st.write(f'{model} Forecast for {hourly_start}')
+        st.line_chart(hourly_avg.set_index('Hour')[model])
     else:
         st.write(f'No data available for {model} on {hourly_start}')
 
