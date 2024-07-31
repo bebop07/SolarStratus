@@ -10,11 +10,11 @@ st.set_page_config(
 )
 
 # -----------------------------------------------------------------------------
-# Generate realistic-looking data.
+# Generate realistic-looking data with variability.
 
 @st.cache_data
 def generate_solar_forecast_data():
-    """Generate simulated solar power forecast data."""
+    """Generate simulated solar power forecast data with variability."""
     
     np.random.seed(42)
     start_date = dt.date(2024, 1, 1)
@@ -25,8 +25,8 @@ def generate_solar_forecast_data():
     hourly_data = []
     for single_date in date_range:
         for hour in range(24):
-            # Peak solar power around noon
-            peak_hour = 13  # Peak at 1 PM
+            # Add variability to peak hour
+            peak_hour = np.random.randint(10, 16)  # Peak between 10 AM and 4 PM
             base_power = 250
             max_power = 400
             power = base_power + (max_power - base_power) * np.exp(-((hour - peak_hour) ** 2) / 2)
@@ -34,8 +34,8 @@ def generate_solar_forecast_data():
                 single_date,
                 hour,
                 power,  # Model 1
-                power * np.random.uniform(0.95, 1.05),  # Model 2 with slight variance
-                power * np.random.uniform(0.95, 1.05)   # Model 3 with slight variance
+                power * np.random.uniform(0.90, 1.10),  # Model 2 with wider variance
+                power * np.random.uniform(0.90, 1.10)   # Model 3 with wider variance
             ])
 
     df = pd.DataFrame(hourly_data, columns=['Date', 'Hour', 'Model 1', 'Model 2', 'Model 3'])
@@ -49,7 +49,7 @@ solar_df = generate_solar_forecast_data()
 
 # Set the title that appears at the top of the page.
 st.title(':sunny: Solar Power Forecast Dashboard')
-st.markdown("Explore solar power forecasts for your rooftop panels. View both daily and hourly predictions from various models to optimize your solar energy usage.")
+st.markdown("Explore solar power forecasts for your rooftop panels. Compare predictions from various models to optimize your solar energy usage.")
 
 # Add some spacing
 st.write('')
@@ -93,8 +93,8 @@ for model in selected_models:
     daily_forecast = weekly_data.groupby('Date').agg({model: 'mean'}).reset_index()
     daily_forecast['Date'] = pd.to_datetime(daily_forecast['Date'])
     
-    # Normalize data
-    daily_forecast[model] = np.clip(daily_forecast[model], 250, 400)
+    # Normalize data with added variability
+    daily_forecast[model] = np.clip(daily_forecast[model], 250, 400) * np.random.uniform(0.98, 1.02)
     
     # Plot with Streamlit
     st.line_chart(daily_forecast.set_index('Date')[model])
@@ -125,8 +125,8 @@ for model in selected_models:
     if not hourly_forecast.empty:
         hourly_avg = hourly_forecast.groupby('Hour').agg({model: 'mean'}).reset_index()
         
-        # Normalize data
-        hourly_avg[model] = np.clip(hourly_avg[model], 250, 400)
+        # Normalize data with added variability
+        hourly_avg[model] = np.clip(hourly_avg[model], 250, 400) * np.random.uniform(0.98, 1.02)
         
         st.write(f'{model} Forecast for {hourly_start}')
         st.line_chart(hourly_avg.set_index('Hour')[model])
@@ -148,9 +148,13 @@ st.markdown("""
     }
     .stTitle {
         color: #ffb547;
+        font-size: 2em;
     }
     .stHeader {
         color: #ff8c00;
+    }
+    .stMarkdown {
+        font-family: 'Arial', sans-serif;
     }
 </style>
 """, unsafe_allow_html=True)
