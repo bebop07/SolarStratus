@@ -5,7 +5,7 @@ import datetime as dt
 
 # Set the title and favicon that appear in the Browser's tab bar.
 st.set_page_config(
-    page_title='Solar Power Forecast Dashboard',
+    page_title='SolarStattus',
     page_icon=':sunny:',  # This is an emoji shortcode. Could be a URL too.
 )
 
