@@ -48,7 +48,7 @@ solar_df = generate_solar_forecast_data()
 # Draw the actual page
 
 # Set the title that appears at the top of the page.
-st.title(':sunny: Solar Power Forecast Dashboard')
+st.title(':sunny: SolarStattus Dashboard')
 st.markdown("Explore solar power forecasts for your rooftop panels. Compare predictions from various models to optimize your solar energy usage.")
 
 # Add some spacing
